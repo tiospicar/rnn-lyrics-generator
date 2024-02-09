@@ -12,6 +12,7 @@ TRAIN_DATA_LEN = 100000 # Number of samples for training
 VALIDATE_DATA_LEN = 20000 # Number of samples for validating
 BATCH_SIZE = 256
 EPOCHS = 100
+TEMPERATURE = 0.4 # More temperature gives more randomness when sampling next character. Lower temperature gives more predictable but repetitive results. Optimal between 0.4 and 0.6.
 MODEL_OUTPUT_FILE = './models/model.h5'
 
 def preprocess_data(df):
@@ -75,10 +76,10 @@ def split_data_chars(df, char_to_index):
     print("Data splitten!")
     return train_x, train_y, validate_x, validate_y
    
-def sample_with_temperature(prediction, temperature): # We add a little randomness when sampling from learned distribution to avoid repetitive results
+def sample_with_temperature(prediction): # We add a little randomness when sampling from learned distribution to avoid repetitive results
     """ Adding randomness when predicting next character """
 
-    prediction = np.log(prediction) / temperature # Lower the temperature, predictions will be more confident, higher the temperature we have more randomness
+    prediction = np.log(prediction) / TEMPERATURE # Lower the temperature, predictions will be more confident, higher the temperature we have more randomness
     exp_prediction = np.exp(prediction)
     normalized_prediction = exp_prediction / np.sum(exp_prediction)
     sampled_index = np.random.choice(len(prediction), p=normalized_prediction)
@@ -100,7 +101,7 @@ def generate_lyrics(model, length=100):
         p = model.predict([input], verbose=0)[0]
         p = np.asarray(p).astype('float64')
         
-        index = sample_with_temperature(p, 0.4)
+        index = sample_with_temperature(p)
         next_char = index_to_char[index]
         
         input_text = input_text[1:]
